@@ -1,19 +1,37 @@
 #pragma once
+
+/* send and receive codes between client and server */
+/* This is your basic WINSOCK shell */
+#pragma comment( linker, "/defaultlib:ws2_32.lib" )
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+#include <fstream>
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
 class Network
 {
 public:
-	Network();
+	Network(SOCKET socket);
 	~Network();
 
-	bool readfile(SOCKET sock, FILE *f);
-	bool sendfile(SOCKET sock, FILE *f);
+	bool readFile(FILE *f);
+	bool sendFile(FILE *f);
 private:
 	SOCKET sock;
+	static const int BUFF_LENGTH = 1024;
+	char hostname[NI_MAXHOST];
 
-	bool readlong(SOCKET sock, long *value);
-	bool readdata(SOCKET sock, void *buf, int buflen);
+	void startWinSock();
+	void GetLocalHostInfo();
 
-	bool sendlong(SOCKET sock, long value);
-	bool senddata(SOCKET sock, void *buf, int buflen);
+	bool readLong(long *value);
+	bool readData(void *buf, int buflen);
+
+	bool sendLong(long value);
+	bool sendData(void *buf, int buflen);
 };
 

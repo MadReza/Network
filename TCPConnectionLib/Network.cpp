@@ -1,15 +1,8 @@
 #include "Network.h"
 
-/* send and receive codes between client and server */
-/* This is your basic WINSOCK shell */
-#pragma comment( linker, "/defaultlib:ws2_32.lib" )
-#include <winsock2.h>
-#include <ws2tcpip.h>
-
-#include <fstream>
-
-Network::Network()
+Network::Network(SOCKET socket)
 {
+	sock = socket;
 }
 
 
@@ -18,7 +11,37 @@ Network::~Network()
 }
 
 
-bool Network::senddata(SOCKET sock, void *buf, int buflen)
+void Network::startWinSock()
+{
+	WSADATA wsadata;
+	if (WSAStartup(0x0202, &wsadata) != 0){
+		cout << "Error in starting WSAStartup()" << endl;	//TODO What To do when Scoket doesn't open ?
+	}
+	else {
+		//"WSAStartup was successful\n";
+		//WriteFile(test, buffer, sizeof(buffer), &dwtest, NULL);	//TODO: Write To a File for error
+	}
+}
+
+//TODO MAKE THIS RETURN THE localhost Info &&&& Remove Junk
+void Network::GetLocalHostInfo()
+{
+	//Display name of local host.
+	char localHost[21];
+
+	gethostname(localHost, 20);
+	cout << "ftp_tcp starting on host: " << localHost << endl;
+
+	if ((hp = gethostbyname(localhost)) == NULL)
+		throw "gethostbyname failed\n";
+}
+
+
+
+
+
+
+bool Network::sendData(void *buf, int buflen)
 {
 	char *pbuf = (char *)buf;
 
@@ -42,20 +65,20 @@ bool Network::senddata(SOCKET sock, void *buf, int buflen)
 	return true;
 }
 
-bool Network::sendlong(SOCKET sock, long value)
+bool Network::sendLong(long value)
 {
 	value = htonl(value);
-	return senddata(sock, &value, sizeof(value));
+	return sendData(&value, sizeof(value));
 }
 
-bool Network::sendfile(SOCKET sock, FILE *f)
+bool Network::sendFile(FILE *f)
 {
 	fseek(f, 0, SEEK_END);
 	long filesize = ftell(f);
 	rewind(f);
 	if (filesize == EOF)
 		return false;
-	if (!sendlong(sock, filesize))
+	if (!sendLong(filesize))
 		return false;
 	if (filesize > 0)
 	{
@@ -66,7 +89,7 @@ bool Network::sendfile(SOCKET sock, FILE *f)
 			num = fread(buffer, 1, num, f);
 			if (num < 1)
 				return false;
-			if (!senddata(sock, buffer, num))
+			if (!sendData(buffer, num))
 				return false;
 			filesize -= num;
 		} while (filesize > 0);
@@ -75,7 +98,7 @@ bool Network::sendfile(SOCKET sock, FILE *f)
 }
 
 
-bool Network::readdata(SOCKET sock, void *buf, int buflen)
+bool Network::readData(void *buf, int buflen)
 {
 	char *pbuf = (char *)buf;
 
@@ -101,18 +124,18 @@ bool Network::readdata(SOCKET sock, void *buf, int buflen)
 	return true;
 }
 
-bool Network::readlong(SOCKET sock, long *value)
+bool Network::readLong(long *value)
 {
-	if (!readdata(sock, value, sizeof(value)))
+	if (!readData(value, sizeof(value)))
 		return false;
 	*value = ntohl(*value);
 	return true;
 }
 
-bool Network::readfile(SOCKET sock, FILE *f)
+bool Network::readFile(FILE *f)
 {
 	long filesize;
-	if (!readlong(sock, &filesize))
+	if (!readLong(&filesize))
 		return false;
 	if (filesize > 0)
 	{
@@ -120,7 +143,7 @@ bool Network::readfile(SOCKET sock, FILE *f)
 		do
 		{
 			int num = min(filesize, sizeof(buffer));
-			if (!readdata(sock, buffer, num))
+			if (!readData(buffer, num))
 				return false;
 			int offset = 0;
 			do

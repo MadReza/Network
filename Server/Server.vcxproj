@@ -16,6 +16,11 @@
   <ItemGroup>
     <Text Include="OldServer.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TCPConnectionLib\TCPConnectionLib.vcxproj">
+      <Project>{13a19b1d-c54d-49fd-a659-7eb060738216}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{6A3F6871-263E-4FA5-94DA-90BEF805C5CA}</ProjectGuid>
     <RootNamespace>Server</RootNamespace>
@@ -50,9 +55,11 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\TCPConnectionLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\TCPConnectionLib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
