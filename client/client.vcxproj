@@ -11,15 +11,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="W:\Comp 445\a1\ftp_tcp.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <Text Include="oldClient.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TCPConnectionLib\TCPConnectionLib.vcxproj">
       <Project>{13a19b1d-c54d-49fd-a659-7eb060738216}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ftp_tcp.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AA4026E9-01E0-4ABF-AC9E-30599908E929}</ProjectGuid>
