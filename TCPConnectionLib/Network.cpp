@@ -1,16 +1,5 @@
 #include "Network.h"
 
-Network::Network(SOCKET socket)
-{
-	sock = socket;
-}
-
-
-Network::~Network()
-{
-}
-
-
 void Network::startWinSock()
 {
 	WSADATA wsadata;
@@ -24,22 +13,56 @@ void Network::startWinSock()
 }
 
 //TODO MAKE THIS RETURN THE localhost Info &&&& Remove Junk
-void Network::GetLocalHostInfo()
+char* Network::getLocalHostInfo()
 {
 	//Display name of local host.
-	char localHost[21];
+	char *localHost = new char[21];
+	HOSTENT *hp;	//TODO usless ?
 
 	gethostname(localHost, 20);
-	cout << "ftp_tcp starting on host: " << localHost << endl;
+	cout << "Localhost: " << localHost << endl;	//TODO remove after testing
 
-	if ((hp = gethostbyname(localhost)) == NULL)
-		throw "gethostbyname failed\n";
+	if ((hp = gethostbyname(localHost)) == NULL)
+		throw "gethostbyname failed\n";	//TODO manage it better
+
+	return localHost;
 }
 
+HOSTENT* Network::hostExists(char name[])
+{
+	rp = gethostbyname(name);
+	if (rp == NULL)
+	{
+		return NULL;
+	}
+	return rp;
+}
 
+void Network::createSocket(int sockType)
+{
+	//Create the socket
+	if ((sock = socket(AF_INET, sockType, 0)) == INVALID_SOCKET)
+		throw "Socket failed\n";
+	/* For UDP protocol replace SOCK_STREAM with SOCK_DGRAM */
 
+	//Specify server address for client to connect to server.
+	memset(&sa_in, 0, sizeof(sa_in));
+	memcpy(&sa_in.sin_addr, rp->h_addr, rp->h_length);
+	sa_in.sin_family = rp->h_addrtype;
+	sa_in.sin_port = htons(port);
+}
 
+void Network::connectToServer()
+{
+	//Connect Client to the server
+	if (connect(sock, (LPSOCKADDR)&sa_in, sizeof(sa_in)) == SOCKET_ERROR)
+		throw "connect failed\n";
+}
 
+void Network::closeSocket()
+{
+	closesocket(sock);
+}
 
 bool Network::sendData(void *buf, int buflen)
 {
@@ -157,4 +180,33 @@ bool Network::readFile(FILE *f)
 		} while (filesize > 0);
 	}
 	return true;
+}
+
+int Network::sendMsg(char msg[])
+{
+	int buffSizeToSend = strlen(msg);	//TCP doesn't send all the bytes all the time.
+	char *pbuf = msg;
+	int iResult(-1);
+
+	while (buffSizeToSend > 0)
+	{
+		iResult = send(sock, pbuf, buffSizeToSend, 0);
+		if (iResult == SOCKET_ERROR)
+		{
+			if (WSAGetLastError() == WSAEWOULDBLOCK)	//Buffer is full. Not a real error so SKIP
+			{
+				continue;
+			}
+			return iResult;
+		}
+		pbuf += iResult;	//Move forward to the part that didn't go through
+		buffSizeToSend -= iResult;
+	}
+
+	return iResult;	//0 for finished good.
+}
+
+SOCKET Network::getSocket()
+{
+	return sock;
 }
